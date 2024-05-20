@@ -1,0 +1,99 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Getting ready, replace the examples in the variable values with your own
+###############################################################################
+
+# Enter your own values for these variables
+EMR_ACCOUNT=123456789
+CATALOG_ACCOUNT=987654321
+REGION=us-east-1
+
+
+###############################################################################
+# Step 2
+###############################################################################
+aws s3 cp PrintTables.py $S3_SCRIPTS_URL/
+
+
+###############################################################################
+# Step 6
+###############################################################################
+cat << EOF 
+{ 
+  "Version": "2012-10-17",
+  "Statement": [ {
+    "Effect": "Allow",
+    "Principal": {
+      "AWS": 
+"arn:aws:iam::${EMR_ACCOUNT}:role/EMR_EC2_DefaultRole"
+    },
+    "Action": [ "glue:GetDatabase",
+"glue:GetPartition","glue:GetTables", 
+"glue:GetPartitions", "glue:BatchGetPartition", 
+"glue:GetDatabases", "glue:GetTable", 
+"glue:GetUserDefinedFunction", 
+"glue:GetUserDefinedFunctions"],
+
+    "Resource" : [ 
+"arn:aws:glue:$REGION:$CATALOG_ACCOUNT:catalog", 
+"arn:aws:glue:$REGION:$CATALOG_ACCOUNT:database\
+/default", 
+"arn:aws:glue:$REGION:$CATALOG_ACCOUNT:database\
+/cross_catalog_recipe", 
+"arn:aws:glue:$REGION:$CATALOG_ACCOUNT:table\
+/cross_catalog_recipe/*", 
+"arn:aws:glue:$REGION:$CATALOG_ACCOUNT:database\
+/global_temp"] 
+  } ] 
+}
+EOF
+
+
+###############################################################################
+# Step 8
+###############################################################################
+METASTORE_CLASS="com.amazonaws.glue.catalog.metastore.\
+AWSGlueDataCatalogHiveClientFactory"
+
+aws emr create-cluster --name CrossAccountCatalog \
+--release-label emr-6.11.0 --instance-count 2 \
+--log-uri $S3_LOGS_URL --instance-type=m5.xlarge \
+--applications Name=Spark --use-default-roles \
+--ec2-attributes SubnetId=${SUBNET} --auto-terminate\
+ --steps Type=Spark,Name=SparkPi,ActionOnFailure=\
+TERMINATE_CLUSTER,Args=[$S3_SCRIPTS_URL/\
+PrintTables.py] --configurations '[{"Classification":
+"spark-hive-site", "Properties": 
+{"hive.metastore.client.factory.class": 
+"'$METASTORE_CLASS'","hive.metastore.glue.catalogid": 
+"'$CATALOG_ACCOUNT'"}}]'
+
+
+###############################################################################
+# Step 9
+###############################################################################
+# Replace j-XXXXXXXXX with the id returned in step 8
+aws emr describe-cluster --cluster-id j-XXXXXXXXX | grep '"State"'
+
+
+###############################################################################
+# Step 10
+###############################################################################
+# Replace j-XXXXXXXXX with the id returned in step 8
+aws s3 cp $S3_LOGS_URL/j-XXXXXXXXX/steps/ . --exclude '*' --include '*stdout.gz' --recursive
+ 
+ 
+###############################################################################
+# Step 11
+###############################################################################
+# Replace the downloaded file path with the one returned on Step 10
+zcat s-XXXXXXXXXXXXXXXXX/stdout.gz 
+
+
+###############################################################################
+# Step 12
+###############################################################################
+# Cleanup manually from the catalog account the database, table and policy 
+aws s3 rm --recursive $S3_LOGS_URL
+aws s3 rm $S3_SCRIPTS_URL/PrintTables.py

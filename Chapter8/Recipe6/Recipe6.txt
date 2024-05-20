@@ -1,0 +1,73 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Step 1
+###############################################################################
+aws glue create-job --name recipe-shell-reveng\
+ --role arn:aws:iam::$(aws sts get-caller-identity\
+ --query 'Account' --output text)\
+:role/SomeRoleForGlue --command \
+ '{"Name":  "pythonshell", "PythonVersion":"3.9",
+  "ScriptLocation": "s3://somebucket/yourscript.py"}'
+
+
+###############################################################################
+# Step 2
+###############################################################################
+aws glue get-job --job-name recipe-shell-reveng
+
+
+###############################################################################
+# Step 3
+###############################################################################
+mkdir recipe_reveng && cd recipe_reveng
+echo "provider "aws" {}" > provider.tf
+terraform init
+
+
+###############################################################################
+# Step 4
+###############################################################################
+terraformer import aws --path-pattern=.\
+ --compact=true --resources=glue --filter\
+ "Name=name;Value=recipe-shell-reveng"
+
+
+###############################################################################
+# Step 6
+###############################################################################
+vi resources.tf
+# Remove the number_of_workers line and change max_retries to 1
+
+
+###############################################################################
+# Step 6
+###############################################################################
+terraform plan
+
+# Run only if needed because it doesn't automatically set the provider
+#terraform state replace-provider registry.terraform.io/-/aws registry.terraform.io/hashicorp/aws
+
+# On Microsoft Windows, might need to disable file locking running instead
+#terraform plan -lock=false
+
+
+###############################################################################
+# Step 7
+###############################################################################
+terraform apply
+# On Microsoft Windows, might need to disable file locking running instead
+#terraform apply -lock=false
+
+aws glue get-job --job-name recipe-shell-reveng
+
+
+###############################################################################
+# Step 8
+###############################################################################
+terraform destroy
+
+# On Microsoft Windows, might need to disable file locking running instead
+#terraform destroy -lock=false
+
+

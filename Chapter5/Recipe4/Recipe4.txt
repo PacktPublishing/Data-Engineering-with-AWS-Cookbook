@@ -1,0 +1,82 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Step 1
+###############################################################################
+aws iam  attach-role-policy --role-name \
+EMR_DefaultRole --policy-arn \
+arn:aws:iam::aws:policy/\
+AmazonElasticMapReducePlacementGroupPolicy
+
+
+###############################################################################
+# Step 2
+###############################################################################
+CLUSTER_ID=$(aws emr create-cluster --release-label \
+emr-7.1.0 --use-default-roles --applications \
+Name=HBase --use-default-roles --ec2-attributes \
+SubnetId=$SUBNET,KeyName=$KEYNAME --instance-groups \
+InstanceGroupType=MASTER,InstanceCount=3,InstanceType\
+=m5.xlarge InstanceGroupType=CORE,InstanceCount=1\
+,InstanceType=m5.xlarge --placement-group-configs \
+InstanceRole=MASTER | grep ClusterArn \
+| grep -o 'j-.*[^",]');
+echo $CLUSTER_ID
+
+
+###############################################################################
+# Step 3
+###############################################################################
+aws emr describe-cluster --cluster-id $CLUSTER_ID
+
+
+###############################################################################
+# Step 4
+###############################################################################
+aws emr describe-cluster --cluster-id $CLUSTER_ID \
+ | grep 'MasterSecurityGroup' | grep -o 'sg-.*[^",]'
+
+
+###############################################################################
+# Step 7
+###############################################################################
+aws emr ssh --cluster-id $CLUSTER_ID --key-pair-file $KEYNAME.pem
+
+# Only if you need to find your public IP manually
+curl ifconfig.me
+
+
+###############################################################################
+# Step 8
+###############################################################################
+grep -A 1 zookeeper.quorum \
+ /etc/hadoop/conf/core-site.xml
+grep qjournal /etc/hadoop/conf/hdfs-site.xml
+grep -A 1 yarn.resourcemanager.address \
+ /etc/hadoop/conf/yarn-site.xml
+
+
+###############################################################################
+# Step 8
+###############################################################################
+exit
+
+
+###############################################################################
+# Step 9
+###############################################################################
+exit
+
+
+###############################################################################
+# Step 10
+###############################################################################
+aws emr modify-cluster-attributes --cluster-id $CLUSTER_ID --no-termination-protected
+aws emr terminate-clusters --cluster-id $CLUSTER_ID
+
+
+###############################################################################
+# Step 11
+###############################################################################
+aws emr describe-cluster --cluster-id $CLUSTER_ID | grep '"State"'
+

@@ -1,0 +1,30 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Step 1
+###############################################################################
+CLUSTER_ID=$(aws emr create-cluster --release-label \
+emr-6.15.0 --auto-terminate --instance-type=\
+m5.xlarge  --instance-count 2 --use-default-roles \
+--use-default-roles --ec2-attributes \
+SubnetId=$SUBNET | grep ClusterArn \
+| grep -o 'j-.*[^",]')
+
+
+###############################################################################
+# Step 2
+###############################################################################
+aws emr describe-cluster --cluster-id $CLUSTER_ID | grep OS
+
+
+###############################################################################
+# Step 3
+###############################################################################
+aws emr describe-release-label --release-label emr-6.15.0
+
+
+###############################################################################
+# Step 4
+###############################################################################
+aws emr terminate-clusters –cluster-id $CLUSTER_ID
+

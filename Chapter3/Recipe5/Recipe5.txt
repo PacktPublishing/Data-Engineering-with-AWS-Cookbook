@@ -1,0 +1,68 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Step 1
+###############################################################################
+cat <<EOF > GroupingFilesRecipeJob.py
+from pyspark.context import SparkContext
+from awsglue.context import GlueContext
+glueContext = GlueContext(SparkContext())
+dynf = glueContext.create_dynamic_frame.from_options(
+    connection_type="s3",
+    connection_options={
+        "paths": ["$S3_INPUT_URL"],
+        "useS3ListImplementation": True,
+        "groupFiles": "inPartition",
+        "groupSize": "100000"
+    },
+    format="csv"
+)
+writer=dynf.toDF().write.format("parquet") 
+writer.mode("overwrite").save("$S3_OUPUT_URL")
+EOF
+
+
+###############################################################################
+# Step 2
+###############################################################################
+aws s3 cp GroupingFilesRecipeJob.py s3://$GLUE_BUCKET
+rm GroupingFilesRecipeJob.py
+
+
+###############################################################################
+# Step 3
+###############################################################################
+aws glue create-job --name GroupingFilesRecipe \
+  --role $GLUE_ROLE_ARN --number-of-workers 2 \
+  --glue-version 4.0 --command '{"Name":
+  "gluestreaming", "ScriptLocation":
+ "s3://'$GLUE_BUCKET'/GroupingFilesRecipeJob.py"}'\
+ --worker-type "G.025X" --default-arguments \
+ '{"--job-language":"python", "--TempDir":
+ "s3://'$GLUE_BUCKET'/tmp/"}'
+
+
+###############################################################################
+# Step 4
+###############################################################################
+JOB_RUN_ID=$(aws glue start-job-run --job-name GroupingFilesRecipe --output text)
+
+
+###############################################################################
+# Step 5
+###############################################################################
+aws glue get-job-run --job-name GroupingFilesRecipe --run-id $JOB_RUN_ID
+
+
+###############################################################################
+# Step 6
+###############################################################################
+aws s3 ls $S3_OUPUT_URL
+
+
+###############################################################################
+# Step 7
+###############################################################################
+aws glue delete-job --job-name GroupingFilesRecipe
+aws s3 rm --recursive $S3_INPUT_URL
+aws s3 rm --recursive $S3_OUPUT_URL

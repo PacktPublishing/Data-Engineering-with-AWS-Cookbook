@@ -1,0 +1,44 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Step 1
+###############################################################################
+CLUSTER_ID=$(aws emr create-cluster --name \
+MonitorRecipe --release-label emr-6.15.0 \
+--instance-type=m5.xlarge --instance-count 2 \
+--use-default-roles --use-default-roles \
+--ec2-attributes SubnetId=$SUBNET,KeyName=$KEYNAME \
+--applications Name=Spark Name=Ganglia --steps \
+Type=Spark,Name=SparkPi,ActionOnFailure=\
+TERMINATE_CLUSTER,Args=--deploy-mode,cluster,\
+--class,org.apache.spark.examples.SparkPi\
+,/usr/lib/spark/examples/jars/spark-examples.jar\
+,100000 --log-uri $S3_LOGS_URL \
+--auto-termination-policy IdleTimeout=3600 \
+| grep ClusterArn | grep -o 'j-.*[^",]')
+
+echo $CLUSTER_ID
+
+
+###############################################################################
+# Step 2
+###############################################################################
+aws emr describe-cluster --cluster-id $CLUSTER_ID | grep 'Dns'
+
+
+###############################################################################
+# Step 6
+###############################################################################
+aws emr socks --cluster-id $CLUSTER_ID --key-pair-file $KEYNAME.pem
+
+# If needed to find the SSH source ip security group rule
+curl ifconfig.me
+
+
+###############################################################################
+# Step 9
+###############################################################################
+aws emr terminate-clusters –cluster-id $CLUSTER_ID
+aws s3 rm --recursive $S3_LOGS_URL
+
+

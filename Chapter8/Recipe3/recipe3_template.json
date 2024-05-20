@@ -1,0 +1,108 @@
+{
+  "Resources": {
+    "S3Bucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": {
+          "Fn::Sub": "recipe-deploy-action-${AWS::AccountId}"
+        }
+      }
+    },
+    "DeployLambdaRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        ]
+      }
+    },
+    "DeployerPolicy": {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "Path": "/",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": "s3:PutObject",
+              "Resource": {
+                "Fn::Sub": "arn:aws:s3:::${S3Bucket}/*"
+              }
+            },
+            {
+              "Effect": "Allow",
+              "Action": "s3:DeleteObject",
+              "Resource": {
+                "Fn::Sub": "arn:aws:s3:::${S3Bucket}/*"
+              }
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "DeployLambdaRole"
+          }
+        ]
+      }
+    },
+    "DeployLambda": {
+      "DependsOn": [
+        "S3Bucket",
+        "DeployLambdaRole",
+        "DeployerPolicy"
+      ],
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": "DeployActionLambda",
+        "Description": "Intended to run during deploment",
+        "Code": {
+          "ZipFile": {
+            "Fn::Sub": "import boto3\nimport cfnresponse\n\ndef handler(event, context):\n  print(f'Event:')\n  print(event)\n  bucket_name = '${S3Bucket}'\n  file_path = 'config/setup.txt'\n\n  if event['RequestType'] == \"Create\":\n    print('The bucket ${S3Bucket}')\n    print(f'Using bucket {bucket_name}')\n    s3 = boto3.resource('s3')\n    config = ('''property1=value1\nproperty2=value2\n''')\n    s3.Object(\n       bucket_name=bucket_name, \n       key=file_path\n    ).put(Body=config)\n  elif event['RequestType'] == \"Delete\":\n    print(f'Deleting file: s3://'\n      '{bucket_name}/{file_path}')\n    boto3.client('s3').delete_object(\n      Bucket=bucket_name,\n      Key=file_path\n    )\n  cfnresponse.send(event, context, cfnresponse.SUCCESS, {})\n"
+          }
+        },
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "DeployLambdaRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "python3.9",
+        "Timeout": 5
+      }
+    },
+    "DeployRun": {
+      "Type": "AWS::CloudFormation::CustomResource",
+      "DependsOn": "DeployLambda",
+      "Version": "1.0",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "DeployLambda",
+            "Arn"
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "RecipeBucketName": {
+      "Description": "Name of the bucket created by the recipe",
+      "Value": {
+        "Ref": "S3Bucket"
+      }
+    }
+  }
+} 

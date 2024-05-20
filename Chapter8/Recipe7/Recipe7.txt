@@ -1,0 +1,67 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+###############################################################################
+# Step 1
+###############################################################################
+BUCKET_NAME="recipe-glue-git-\
+$(aws sts get-caller-identity --query 'Account' --output text)"
+AWS_REGION="$(aws configure get region)"
+aws s3api create-bucket --bucket $BUCKET_NAME \
+  --create-bucket-configuration \
+  LocationConstraint=$AWS_REGION
+echo "print('Running Shell job')" > ShellScript.py
+aws s3 cp ShellScript.py s3://$BUCKET_NAME
+rm ShellScript.py
+
+
+###############################################################################
+# Step 2
+###############################################################################
+aws glue create-job --name recipe-glue-git-job\
+ --role arn:aws:iam::$(aws sts get-caller-identity\
+ --query 'Account' --output text):role/RoleForGlue\
+ --command '{"Name" :  "pythonshell",'\
+'"PythonVersion": "3.9", "ScriptLocation":'\
+'"s3://'$BUCKET_NAME'/ShellScript.py"}'
+
+
+###############################################################################
+# Step 3
+###############################################################################
+aws codecommit create-repository --repository-name RecipeGlueGit
+aws glue update-source-control-from-job --job-name \
+ recipe-glue-git-job --provider AWS_CODE_COMMIT \
+ --repository-name RecipeGlueGit --branch-name main
+
+
+###############################################################################
+# Step 4
+###############################################################################
+aws s3 rm s3://$BUCKET_NAME/ShellScript.py
+aws s3 ls s3://$BUCKET_NAME/
+
+
+###############################################################################
+# Step 5
+###############################################################################
+aws glue update-job-from-source-control --job-name \
+  recipe-glue-git-job --provider AWS_CODE_COMMIT \
+  --repository-name RecipeGlueGit --branch-name main
+aws s3 ls s3://$BUCKET_NAME/
+
+
+###############################################################################
+# Step 1
+###############################################################################
+aws s3 cp s3://$BUCKET_NAME/ShellScript.py .
+cat ShellScript.py
+
+
+###############################################################################
+# Step 1
+###############################################################################
+rm ShellScript.py
+aws glue delete-job --job-name recipe-glue-git-job
+aws s3 rm s3://$BUCKET_NAME/ShellScript.py
+aws s3api delete-bucket --bucket $BUCKET_NAME
+
+

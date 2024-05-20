@@ -1,0 +1,30 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Step 1
+###############################################################################
+ROLE_NAME=EMR_Notebooks_RecipeRole
+
+echo '{"Version":"2012-10-17","Statement":[{"Effect":
+"Allow","Principal":{"Service":
+"elasticmapreduce.amazonaws.com"},"Action":
+"sts:AssumeRole"}]}' > role-assume.json 
+
+aws iam create-role --role-name $ROLE_NAME \
+--assume-role-policy-document file://role-assume.json
+
+aws iam attach-role-policy --policy-arn \
+arn:aws:iam::aws:policy/service-role/\
+AmazonElasticMapReduceRole --role-name $ROLE_NAME
+
+aws iam attach-role-policy --role-name $ROLE_NAME \
+--policy-arn arn:aws:iam::aws:policy/service-role/\
+AmazonElasticMapReduceEditorsRole
+
+aws iam attach-role-policy --policy-arn \
+arn:aws:iam::aws:policy/AmazonS3FullAccess \
+--role-name $ROLE_NAME
+
+rm role-assume.json 
+
+

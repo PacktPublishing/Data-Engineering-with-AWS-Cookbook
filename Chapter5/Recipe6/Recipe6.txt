@@ -1,0 +1,50 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Step 1
+###############################################################################
+cat > recipe_bootstrap.sh << EOF
+#!/bin/bash
+set –x
+/usr/bin/pip3 install -U scikit-learn
+EOF
+
+
+###############################################################################
+# Step 2
+aws s3 cp recipe_bootstrap.sh $S3_SCRIPTS_URL/
+###############################################################################
+
+
+###############################################################################
+# Step 3
+###############################################################################
+BOOTSTRAP_SCRIPT=$S3_SCRIPTS_URL/recipe_bootstrap.sh
+CLUSTER_ID=$(aws emr create-cluster \
+--name BootstrapRecipe --log-uri $S3_LOGS_URL \
+--auto-terminate  --release-label "emr-6.15.0" \
+--instance-type=m5.xlarge --instance-count 2 \
+--applications Name=Spark --use-default-roles \
+--ec2-attributes SubnetId=$SUBNET --bootstrap-action\
+ Name=PythonDeps,Path=$BOOTSTRAP_SCRIPT --steps \
+'[{"Name": "Validate bootstrapaction",
+"ActionOnFailure":"TERMINATE_CLUSTER", "Jar":
+"command-runner.jar","Properties":"","Args":
+["/usr/bin/python3","-c","exec(\"import sklearn'\
+'\\nprint(sklearn.__version__)\")"],
+"Type":"CUSTOM_JAR"}]')
+
+
+###############################################################################
+# Step 5
+###############################################################################
+aws s3 cp ${S3_LOGS_URL}/your cluster id>/\
+steps/<the step id>/stdout.gz
+
+
+###############################################################################
+# Step 6
+###############################################################################
+aws s3 rm $S3_SCRIPTS_URL/recipe_bootstrap.sh
+aws s3 rm --recursive $S3_LOGS_URL
+

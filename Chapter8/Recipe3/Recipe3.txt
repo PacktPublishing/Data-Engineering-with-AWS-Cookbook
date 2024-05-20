@@ -1,0 +1,39 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Step 1
+###############################################################################
+aws cloudformation validate-template --template-body file://recipe3_template.json
+
+
+###############################################################################
+# Step 4
+###############################################################################
+aws cloudformation deploy --template-file\
+ recipe3_template.json --stack-name RecipeCF-Action\
+ --capabilities CAPABILITY_IAM
+
+
+###############################################################################
+# Step 5
+###############################################################################
+BUCKET_NAME="recipe-deploy-action-$(aws sts get-caller-identity \
+  --query 'Account' --output text)"
+
+aws s3 ls --recursive $BUCKET_NAME 
+
+
+###############################################################################
+# Step 7
+###############################################################################
+aws cloudformation delete-stack --stack-name RecipeCF-Action
+
+
+###############################################################################
+# Step 8
+###############################################################################
+aws cloudformation describe-stack-events \
+--stack-name RecipeCF-Action --max-items 3
+
+
+ 

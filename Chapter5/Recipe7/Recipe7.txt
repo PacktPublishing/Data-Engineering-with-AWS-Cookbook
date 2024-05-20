@@ -1,0 +1,42 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Step 1
+###############################################################################
+aws emr create-cluster --name SparkResourcesRecipe \
+--release-label emr-6.15.0 --auto-terminate \
+--instance-type=m5.2xlarge --log-uri $S3_LOGS_URL \
+--instance-count 2 --applications Name=Spark \
+--use-default-roles --ec2-attributes \
+SubnetId=$SUBNET --steps Type=Spark,Name=SparkPi\
+,ActionOnFailure=TERMINATE_CLUSTER,Args=\
+--deploy-mode,cluster,--class,org.apache.spark.\
+examples.SparkPi,/usr/lib/spark/examples/jars/\
+spark-examples.jar,12
+
+
+###############################################################################
+# Step 8
+###############################################################################
+aws emr create-cluster --name SparkResourcesRecipe2 \
+--release-label emr-6.15.0 --applications Name=Spark\
+ --instance-type=m5.2xlarge --instance-count 2\
+ --use-default-roles --ec2-attributes\
+ SubnetId=${SUBNET} --log-uri $S3_LOGS_URL \
+--auto-terminate --configurations \
+'[{"Classification":"spark-defaults","Properties":
+{"spark.yarn.heterogeneousExecutors.enabled":"false"}}
+]' --steps Type=Spark,Name=SparkPi,ActionOnFailure\
+=TERMINATE_CLUSTER,Args=[--deploy-mode,cluster,\
+--executor-cores,4,--executor-memory,6G,--conf,\
+'spark.yarn.executor.memoryOverhead=1G',\
+--class,org.apache.spark.examples.SparkPi,\
+/usr/lib/spark/examples/jars/spark-examples.jar,12]
+
+
+###############################################################################
+# Step 10
+###############################################################################
+aws s3 rm --recursive $S3_LOGS_URL
+
+

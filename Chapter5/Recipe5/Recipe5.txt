@@ -1,0 +1,55 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Step 1
+###############################################################################
+CLUSTER_ID=$(aws emr create-cluster --name AutoScale\
+ --release-label emr-7.1.0 --use-default-roles \
+ --ec2-attributes SubnetId=${SUBNET} \
+ --auto-termination-policy IdleTimeout=900 \
+ --applications Name=Spark --instance-groups \
+'[{"InstanceCount":1,"InstanceGroupType":"MASTER",
+"Name":"MASTER","InstanceType":"m5.xlarge"},
+{"InstanceCount":1,"InstanceGroupType":"CORE",
+"Name":"CORE","InstanceType":"m5.xlarge"},
+{"InstanceCount":1,"InstanceGroupType":"TASK",
+"Name":"TASK","InstanceType":"m5.xlarge"}]' \
+--managed-scaling-policy '{"ComputeLimits":
+{"UnitType":"Instances","MinimumCapacityUnits":1,
+"MaximumCapacityUnits":10,
+"MaximumOnDemandCapacityUnits":10,
+"MaximumCoreCapacityUnits":2}}' \
+| grep ClusterArn | grep -o 'j-.*[^",]')
+
+echo $CLUSTER_ID
+
+
+###############################################################################
+# Step 2
+###############################################################################
+aws emr describe-cluster --cluster-id $CLUSTER_ID \
+ | grep -B 3 -A 5 "RunningInstanceCount"
+
+
+###############################################################################
+# Step 3
+###############################################################################
+aws emr add-steps --cluster-id $CLUSTER_ID --steps \
+Type=Spark,Name=SparkPi,ActionOnFailure=\
+TERMINATE_CLUSTER,Args=--class,org.apache.spark.\
+examples.SparkPi,/usr/lib/spark/examples/jars/\
+spark-examples.jar,10000
+
+
+###############################################################################
+# Step 4
+###############################################################################
+aws emr describe-cluster --cluster-id $CLUSTER_ID \
+| grep -B 2 -A 3 "RequestedInstanceCount"
+
+
+###############################################################################
+# Step 5
+###############################################################################
+aws emr terminate-clusters --cluster-id $CLUSTER_ID
+
