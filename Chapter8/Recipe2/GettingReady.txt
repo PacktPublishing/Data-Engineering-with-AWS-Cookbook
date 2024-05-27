@@ -1,0 +1,5 @@
+# Enter your own values in the <placeholders>
+
+cdk bootstrap <pipeline account>/<pipeline region> --profile <profile name> \ 
+ --trust <main account id> --cloudformation-execution-policies \ 
+ arn:aws:iam::aws:policy/AdministratorAccess

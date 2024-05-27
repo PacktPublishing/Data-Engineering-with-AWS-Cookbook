@@ -1,0 +1,95 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Step 1
+###############################################################################
+mkdir my_module
+cat <<EOF > my_module/__init__.py
+from random import randint
+
+def do_some_calculation(a):
+  return randint(1, 10) + a
+
+def get_config_value():
+  with open('/tmp/my_config') as f:
+    lines = f.readlines()
+    return lines[0].strip()
+EOF
+
+zip -r my_module my_module
+echo "recipe_example_value" > my_config
+
+
+###############################################################################
+# Step 2
+###############################################################################
+RECIPE_S3_PATH=s3://$GLUE_BUCKET/reuse_module
+aws s3 cp my_module.zip $RECIPE_S3_PATH/
+rm my_module.zip
+rm my_module/__init__.py
+rmdir my_module
+aws s3 cp my_config $RECIPE_S3_PATH/
+rm my_config
+
+
+###############################################################################
+# Step 3
+###############################################################################
+cat <<EOF > ReuseLibrariesRecipe.py
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import lit, udf
+from my_module import do_some_calculation, get_config_value
+
+spark = SparkSession.builder.getOrCreate()
+df = spark.range(1 << 4).toDF("id")
+df = df.withColumn("config_val",
+         lit(get_config_value()))
+calc_udf = udf(do_some_calculation)
+df = df.withColumn("calc", calc_udf(df["id"]))
+df.repartition(1).write.csv("$RECIPE_S3_PATH/out")
+EOF
+
+aws s3 cp ReuseLibrariesRecipe.py $RECIPE_S3_PATH/
+rm ReuseLibrariesRecipe.py
+
+
+###############################################################################
+# Step 4
+###############################################################################
+aws glue create-job --name ReuseLibraryRecipe --role\
+ $GLUE_ROLE_ARN --glue-version 4.0 --command \
+ '{"Name": "glueetl", "ScriptLocation":
+ "'$RECIPE_S3_PATH'/ReuseLibrariesRecipe.py"}' \
+ --number-of-workers 2 --worker-type "G.1X" \
+ --default-arguments '{"--job-language":"python", 
+ "--extra-py-files":"'$RECIPE_S3_PATH'/my_module.zip",
+ "--extra-files": "'$RECIPE_S3_PATH'/my_config",
+ "--TempDir": "'$RECIPE_S3_PATH'/tmp/"}'
+
+
+###############################################################################
+# Step 5
+###############################################################################
+JOB_RUN_ID=$(aws glue start-job-run --job-name ReuseLibraryRecipe --output text)
+
+
+###############################################################################
+# Step 6
+###############################################################################
+aws glue get-job-run --job-name ReuseLibraryRecipe --run-id $JOB_RUN_ID
+
+
+###############################################################################
+# Step 7
+###############################################################################
+aws s3 sync $RECIPE_S3_PATH/out/ .
+cat part-*-c000.csv
+rm part-*-c000.csv
+
+
+###############################################################################
+# Step 8
+###############################################################################
+aws glue delete-job --job-name ReuseLibraryRecipe
+
+

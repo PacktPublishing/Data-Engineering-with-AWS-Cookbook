@@ -1,0 +1,82 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Step 1
+###############################################################################
+cat <<EOF > IcebergRecipe.scala
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions.{col,lit,rand}
+
+object GlueApp {
+  def main(sysArgs: Array[String]) {
+    val spark = (SparkSession.builder 
+       .config("spark.sql.extensions", 
+             "org.apache.iceberg.spark.\
+extensions.IcebergSparkSessionExtensions")
+       .config("spark.sql.catalog.iceberg", 
+             "org.apache.iceberg.spark.SparkCatalog")
+       .config("spark.sql.catalog.iceberg.warehouse", 
+             "s3://$GLUE_BUCKET/iceberg")
+       .config("spark.sql.catalog.iceberg.catalog-\
+impl", "org.apache.iceberg.aws.glue.GlueCatalog")
+       .config("spark.sql.catalog.iceberg.io-impl", 
+             "org.apache.iceberg.aws.s3.S3FileIO")
+        .getOrCreate())
+ 
+    val db = "iceberg_recipe_db"
+    spark.sql("CREATE DATABASE IF NOT EXISTS iceberg." + db)
+    val df = (spark.range(1 << 10).toDF("id") 
+               .withColumn("value1", rand()) 
+               .withColumn("region", lit("region1"))
+             )
+    df.writeTo("iceberg." + db + ".icetable").
+       partitionedBy(col("region")).createOrReplace()
+  }
+}
+EOF
+
+
+###############################################################################
+# Step 2
+###############################################################################
+aws s3 cp IcebergRecipe.scala s3://$GLUE_BUCKET
+rm IcebergRecipe.scala
+
+
+###############################################################################
+# Step 3
+###############################################################################
+aws glue create-job --name IcebergRecipe --role \
+ $GLUE_ROLE_ARN --glue-version 4.0 --worker-type \
+ "G.1X" --number-of-workers 2 --default-arguments \
+ '{"--job-language":"scala", "--class": "GlueApp",
+ "--datalake-formats": "iceberg", "--TempDir":
+ "s3://'$GLUE_BUCKET'/tmp/"}' --command '{"Name":
+ "glueetl","ScriptLocation":
+ "s3://'$GLUE_BUCKET'/IcebergRecipe.scala"}' 
+
+
+###############################################################################
+# Step 4
+###############################################################################
+JOB_RUN_ID=$(aws glue start-job-run --job-name IcebergRecipe --output text)
+
+
+###############################################################################
+# Step 5
+###############################################################################
+aws glue get-job-run --job-name IcebergRecipe --run-id $JOB_RUN_ID
+
+
+###############################################################################
+# Step 6
+###############################################################################
+# Run in Athena the following SQL:
+# SELECT * FROM iceberg_recipe_db.icetable LIMIT 20;
+
+
+###############################################################################
+# Step 7
+###############################################################################
+aws glue delete-database --name iceberg_recipe_db
+aws glue delete-job --job-name IcebergRecipe

@@ -1,0 +1,93 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Getting ready
+###############################################################################
+aws --version 
+eksctl version
+
+
+###############################################################################
+# Step 1
+###############################################################################
+eksctl create cluster --name emr-recipe2 \
+--instance-types=m5.xlarge --managed
+
+
+###############################################################################
+# Step 3
+###############################################################################
+eksctl get nodegroup --cluster emr-recipe2 
+
+
+###############################################################################
+# Step 4
+###############################################################################
+eksctl create iamidentitymapping --cluster \
+emr-recipe2 --namespace default \
+--service-name "emr-containers" 
+
+
+###############################################################################
+# Step 5
+###############################################################################
+aws emr-containers create-virtual-cluster \
+--name vc_emr_recipe2 --container-provider \
+'{"id": "emr-recipe2", "type": "EKS", "info": 
+{"eksInfo": {"namespace": "default"}}}' 
+
+
+###############################################################################
+# Step 6
+###############################################################################
+VIRTUAL_CLUSTER_ID=$(aws emr-containers \
+list-virtual-clusters --output text --query \
+"sort_by(virtualClusters, &createdAt)[-1].id")
+
+
+ROLE_ARN=$(eksctl get \
+ iamidentitymapping --cluster emr-recipe2 | \
+ grep emr-containers | cut -f 1)
+
+
+###############################################################################
+# Step 7
+###############################################################################
+cat > emr-recipe2.json << EOF
+{
+    "name": "EmrRecipe2-Pi",
+    "virtualClusterId": "$VIRTUAL_CLUSTER_ID",
+    "executionRoleArn": "$ROLE_ARN",
+    "releaseLabel": "emr-6.10.0-latest",
+    "jobDriver": {
+        "sparkSubmitJobDriver": {
+            "entryPoint": "local:///usr/lib/spark/examples/jars/spark-examples.jar",
+            "sparkSubmitParameters": "--conf spark.executor.instances=1 --conf spark.executor.memory=1G --conf spark.driver.memory=1G --class org.apache.spark.examples.SparkPi"
+        }
+    }
+} 
+
+EOF
+
+
+###############################################################################
+# Step 8
+###############################################################################
+aws emr-containers start-job-run --cli-input-json \
+ file://./emr-recipe2.json
+ 
+ 
+###############################################################################
+# Step 9
+###############################################################################
+aws emr-containers list-job-runs \
+ --virtual-cluster-id $VIRTUAL_CLUSTER_ID
+
+
+###############################################################################
+# Step 10
+###############################################################################
+eksctl delete cluster --name emr-recipe2
+aws emr-containers delete-virtual-cluster --id \
+ ${VIRTUAL_CLUSTER_ID}
+

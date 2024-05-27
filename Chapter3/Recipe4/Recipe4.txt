@@ -1,0 +1,87 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Step 1
+###############################################################################
+cat <<EOF > BookmarksRecipeJob.py
+import sys
+from awsglue.utils import getResolvedOptions
+from pyspark.context import SparkContext
+from awsglue.context import GlueContext
+from awsglue.job import Job
+
+args = getResolvedOptions(sys.argv, ['JOB_NAME'])
+sc = SparkContext()
+glueContext = GlueContext(sc)
+spark = glueContext.spark_session
+job = Job(glueContext)
+job.init(args['JOB_NAME'], args)
+
+dynf = glueContext.create_dynamic_frame_from_options(
+    connection_type = "s3", 
+    connection_options = {
+        "paths": ["$RECIPE_S3_SRC"],
+        "boundedFiles": 5
+    },
+    transformation_ctx="json_source",
+    format = "json"
+)
+
+glueContext.write_dynamic_frame.from_options(
+    frame=dynf.repartition(1),
+    connection_type='s3',
+    format='json',
+    transformation_ctx="csv_dst",
+    connection_options={"path": "$RECIPE_S3_DST"
+    }
+)
+
+job.commit()
+EOF
+
+
+###############################################################################
+# Step 2
+###############################################################################
+aws s3 cp BookmarksRecipeJob.py s3://$GLUE_BUCKET
+rm BookmarksRecipeJob.py
+
+
+###############################################################################
+# Step 3
+###############################################################################
+aws glue create-job --name BookmarksRecipe --role \
+ $GLUE_ROLE_ARN --glue-version 4.0 --command\
+ '{"Name": "glueetl", "ScriptLocation":
+ "s3://'$GLUE_BUCKET'/BookmarksRecipeJob.py"}'\
+ --default-arguments '{"--job-language":"python",
+ "--TempDir": "s3://'$GLUE_BUCKET'/tmp/", 
+ "--job-bookmark-option": "job-bookmark-enable"}'
+
+
+###############################################################################
+# Step 4
+###############################################################################
+JOB_RUN_ID=$(aws glue start-job-run --job-name BookmarksRecipe --output text)
+
+
+###############################################################################
+# Step 5
+###############################################################################
+aws glue get-job-run --job-name BookmarksRecipe --run-id $JOB_RUN_ID
+
+
+###############################################################################
+# Step 6
+###############################################################################
+aws s3 sync $RECIPE_S3_DST bookmarks_recipe_result
+cut -b 1- bookmarks_recipe_result/* | sort
+
+
+###############################################################################
+# Step 8
+###############################################################################
+rm bookmarks_recipe_result/*
+rmdir bookmarks_recipe_result
+aws glue delete-job --job-name BookmarksRecipe
+

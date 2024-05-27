@@ -1,0 +1,39 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "glue:CreateDatabase",
+        "glue:UpdateDatabase",
+        "glue:DeleteDatabase",
+        "glue:GetDatabase",
+        "glue:GetDatabases",
+        "glue:CreateTable",
+        "glue:UpdateTable",
+        "glue:DeleteTable",
+        "glue:GetTable",
+        "glue:GetTables",
+        "glue:GetTableVersions",
+        "glue:CreatePartition",
+        "glue:BatchCreatePartition",
+        "glue:UpdatePartition",
+        "glue:DeletePartition",
+        "glue:BatchDeletePartition",
+        "glue:GetPartition",
+        "glue:GetPartitions",
+        "glue:BatchGetPartition",
+        "glue:CreateUserDefinedFunction",
+        "glue:UpdateUserDefinedFunction",
+        "glue:DeleteUserDefinedFunction",
+        "glue:GetUserDefinedFunction",
+        "glue:GetUserDefinedFunctions"
+      ],
+      "Resource": [
+        "arn:aws:glue:*:*:database/*",
+        "arn:aws:glue:*:*:table/*/*",
+        "arn:aws:glue:*:*:catalog"
+      ]
+    }
+  ]
+}

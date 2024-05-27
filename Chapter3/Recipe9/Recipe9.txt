@@ -1,0 +1,75 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Step 1
+###############################################################################
+cat <<EOF > RayModinRecipeJob.py
+import ray
+import modin.pandas as pd
+import numpy as np
+
+ray.init()
+s3_path = "s3://$GLUE_BUCKET/ray_recipe_output"
+num_samples = 10000
+df = pd.DataFrame({
+      'id' : range(num_samples),
+      'value' : np.random.randn(num_samples),
+     })
+result = df[df['value'] > 0]
+print(f"Std Dev: {df['value'].std()}")
+print(f"Out of {num_samples}, {result.shape[0]} will\
+ be saved after filtering")
+result.to_parquet(s3_path)
+EOF
+
+
+###############################################################################
+# Step 2
+###############################################################################
+aws s3 cp RayModinRecipeJob.py s3://$GLUE_BUCKET
+rm RayModinRecipeJob.py
+
+
+###############################################################################
+# Step 3
+###############################################################################
+aws glue create-job --name RayModinRecipeJob \
+--role $GLUE_ROLE_ARN --command '{"Name": "glueray",
+ "Runtime": "Ray2.4", "ScriptLocation":
+ "s3://'$GLUE_BUCKET'/RayModinRecipeJob.py"}'\
+ --number-of-workers 1 --worker-type "Z.2X"\
+ --glue-version 4.0 --default-arguments \
+ '{"--pip-install": "modin,s3fs"}'
+
+
+###############################################################################
+# Step 4
+###############################################################################
+JOB_RUN_ID=$(aws glue start-job-run --job-name RayModinRecipeJob --output text)
+
+
+###############################################################################
+# Step 5
+###############################################################################
+aws glue get-job-run --job-name RayModinRecipeJob --run-id $JOB_RUN_ID
+
+
+###############################################################################
+# Step 6
+###############################################################################
+aws s3 cp s3://$GLUE_BUCKET/jobs/RayModinRecipeJob/$JOB_RUN_ID/job-result/stdout /tmp
+cat /tmp/stdout && echo -e "\n" && rm /tmp/stdout
+
+
+###############################################################################
+# Step 7
+###############################################################################
+aws s3 ls s3://$GLUE_BUCKET/ray_recipe_output/
+
+
+###############################################################################
+# Step 8
+###############################################################################
+aws glue delete-job --job-name RayModinRecipeJob
+
+

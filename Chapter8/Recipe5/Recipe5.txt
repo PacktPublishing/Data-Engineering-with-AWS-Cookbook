@@ -1,0 +1,124 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Step 1
+###############################################################################
+mkdir terraform_recipe && cd terraform_recipe
+
+
+###############################################################################
+# Step 2
+###############################################################################
+cat > var.tf << EOF
+variable "region" { 
+  description = "AWS region" 
+  type = string 
+  default = "us-east-1" 
+}
+data "aws_caller_identity" "current" {}
+locals { 
+  bucket_name = "terraform-recipe-\
+\${data.aws_caller_identity.current.account_id}" 
+}
+
+variable "script_file" { 
+  type    = string  
+  default = "ShellScriptRecipe.py" 
+}
+EOF
+
+
+###############################################################################
+# Step 3
+###############################################################################
+echo 'print("Running Glue Shell job")' > ShellScriptRecipe.py
+
+
+###############################################################################
+# Step 4
+###############################################################################
+cat > main.tf << 'EOF'
+provider "aws" {
+  region = var.region
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket = local.bucket_name
+}
+
+resource "aws_s3_object" "script" {
+  bucket = local.bucket_name
+  key    = "scripts/${var.script_file}"
+  source = var.script_file
+  depends_on = [
+    aws_s3_bucket.bucket
+  ]
+}
+EOF
+
+
+###############################################################################
+# Step 5
+###############################################################################
+cat >> main.tf << EOF
+resource "aws_iam_role" "glue" {
+  name = "AWSGlueServiceRoleTerraformRecipe"
+  managed_policy_arns = [ 
+"arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess",
+"arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+  ]
+  assume_role_policy = jsonencode(
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Principal": {
+                "Service": "glue.amazonaws.com"
+              },
+              "Effect": "Allow",
+              "Sid": ""
+            }
+          ]
+        }
+    )
+}
+
+resource "aws_glue_job" "shell_job" {
+  name     = "TerraformRecipeShellJob"
+  role_arn = aws_iam_role.glue.arn
+ 
+  command {
+    name = "pythonshell"
+    python_version = "3.9"
+    script_location = "s3://\${local.bucket_name}\
+/scripts/\${var.script_file}"
+  }
+} 
+EOF
+
+###############################################################################
+# Step 6
+###############################################################################
+terraform init
+
+
+###############################################################################
+# Step 7
+###############################################################################
+terraform plan
+
+
+###############################################################################
+# Step 8
+###############################################################################
+# Replace with the region you want to deploy the Glue stack on
+terraform apply -var region=us-east-2
+
+
+###############################################################################
+# Step 10
+###############################################################################
+terraform destroy -var region=us-east-2
+
+

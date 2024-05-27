@@ -1,0 +1,21 @@
+# Here you can find the shell commands that are executed in the shell during the recipe
+
+###############################################################################
+# Getting ready
+###############################################################################
+
+cat <<EOF > testEMRServerless.py
+from pyspark.sql import SparkSession
+spark = (SparkSession.builder.config(
+         "hive.metastore.client.factory.class",
+         "com.amazonaws.glue.catalog.metastore.\
+AWSGlueDataCatalogHiveClientFactory")
+    .enableHiveSupport()
+    .getOrCreate())
+spark.sql("SHOW TABLES").show() 
+EOF
+
+
+# Copy the created file an S3 bucket in your account and make a note of the file path on S3 since you will need it later, 
+# Replace with your destination and uncomment the line
+#aws s3 cp testEMRServerless.py s3://mybucket/
