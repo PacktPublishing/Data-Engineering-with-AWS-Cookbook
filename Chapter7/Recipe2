@@ -1,0 +1,52 @@
+import com.amazonaws.services.glue.GlueContext
+import com.amazonaws.services.glue.util.GlueArgParser
+import com.amazonaws.services.glue.util.Job
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkConf
+import scala.collection.JavaConverters._
+import com.amazonaws.services.glue.log.GlueLogger
+
+import scala.util.matching.Regex
+import com.amazon.deequ.{VerificationSuite, VerificationResult}
+import com.amazon.deequ.VerificationResult.checkResultsAsDataFrame
+import com.amazon.deequ.checks.{Check, CheckLevel}
+import com.amazon.deequ.constraints.ConstrainableDataTypes
+
+object GlueApp {
+  def main(sysArgs: Array[String]) {
+    val spark: SparkContext = new SparkContext()
+    val glueContext: GlueContext = new GlueContext(spark)
+
+    val args = GlueArgParser.getResolvedOptions(sysArgs, Seq("JOB_NAME").toArray)
+    Job.init(args("JOB_NAME"), glueContext, args.asJava)
+    val datasource0 = glueContext.getCatalogSource(database = "dq-test", tableName = "test", redshiftTmpDir = "", transformationContext = "datasource0").getDynamicFrame()
+
+//Deequ start
+    val dataset: DataFrame = dframe.toDF()
+    val verificationResult : VerificationResult = { VerificationSuite()
+    .onData(df)
+    .addCheck(
+        Check(CheckLevel.Error, "Customer Code Check")                                               
+            .isComplete("CUSTOMER_CODE")
+            .isUnique("CUSTOMER_CODE"))
+.addCheck(
+        Check(CheckLevel.Error, "Mobile Check")
+            .isComplete("PHONE_1")
+            .hasPattern("PHONE_1","""^[0][\d]{9}$""".r, _>=0.9)
+            .isUnique("PHONE_1"))
+.addCheck(
+        Check(CheckLevel.Error, "Tax code Check")
+            .isComplete("TAX_ID")
+            .isUnique("TAX_ID")
+            .satisfies("length(`TAX_ID`) = 10 or length(`TAX_ID`) = 14", "is 10 or 14 digits", Check.IsOne, None))
+    .run()
+// retrieve successfully computed metrics as a Spark data frame
+val resultDataFrame = checkResultsAsDataFrame(spark, verificationResult)
+
+glueContext.getSinkWithFormat(
+  connectionType = "s3",
+  options = JsonOptions(Map("path" -> "s3://dq-outputs/results/")),
+  format = "csv"
+).writeDynamicFrame(resultDataFrame)
+Job.commit()
+
