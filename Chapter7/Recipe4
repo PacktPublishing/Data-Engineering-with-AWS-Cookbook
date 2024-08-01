@@ -1,0 +1,70 @@
+
+import logging
+import os
+import subprocess
+import sys
+from functools import reduce
+from itertools import zip_longest
+
+from pandas.testing import assert_frame_equal
+from pyspark import SparkConf, SparkContext
+from pyspark.sql import DataFrame, Row, SparkSession
+from pyspark.sql.types import ArrayType, MapType\
+from pyspark.testing import assertDataFrameEqual, assertSchemaEqual
+
+from pyspark.errors import PySparkAssertionError
+
+
+
+
+class GlueUnitTest:
+    @staticmethod
+    def assert_df_equality(df1, df2, ignore_col_order=True, ignore_row_order=True, ignore_nullable=True):
+        """
+        Check two PySpark dataframes, and raise an exception if they are not equal 
+        Handles list/dict style columns, and prints detailed error messages on failure.
+
+        Do not use this to compare a PySpark dataframe to a Python dict in a test. Instead, collect() the dataframe rows and do a comparison in Python.
+
+        :param df1: The 1st dataframe to check
+        :param df2: The 2nd dataframe to check
+        :param ignore_col_order: If true, the columns will be sorted prior to checking the schema
+        :param ignore_row_order: If true, the rows will be sorted prior to checking the data
+        :param ignore_nullable: If true, differences in whether or not the schema allows None/null will be
+            ignored.
+        """
+        transforms = []
+        if ignore_col_order:
+            transforms.append(lambda df: df.select(sorted(df.columns)))
+        if ignore_row_order:
+            transforms.append(lambda df: df.sort(df.columns))
+        df1 = reduce(lambda acc, fn: fn(acc), transforms, df1)
+        df2 = reduce(lambda acc, fn: fn(acc), transforms, df2)
+        GlueUnitTest.assert_df_schema_equality(df1, df2)
+        GlueUnitTest.assert_df_data_equality(df1, df2)
+    
+    @staticmethod
+    def assert_df_data_equality(df1, df2):
+        """
+        compare two PySpark dataframes and return if rows are different and the percentage of difference
+        :param df1: the first dataframe
+        :param df2: the second dataframe
+        """
+        try:
+            assertDataFrameEqual(df1, df2)
+        except AssertionError as e:
+            raise AssertionError(f"Dataframes are not equal: {e}") from e
+            
+        
+        
+    @staticmethod
+    def assert_df_schema_equality(df1, df2):
+        """
+        Assert that two pyspark dataframe schemas are equal. this function only compares two schemas , column names, datatypes and nullable property
+        :param df1: the first dataframe
+        :param df2: the second dataframe
+        """
+        try:
+            assertSchemaEqual(actual=df1.schema, expected=df2.schema)
+        except AssertionError as e:
+            raise AssertionError(f"Schema are not equal: {e}") from e
