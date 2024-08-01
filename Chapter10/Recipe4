@@ -1,0 +1,74 @@
+[{    
+        "cluster-name": "test",
+        "parameter-group-name": "admin-us-dev",
+        "apply-region": "us-west-1",
+        "rulesets": [{
+            "name": "Workload Management",
+            "configuration": [{
+                    "user_group": [
+                        "admin"
+                    ],
+                    "query_group": [],
+                    "name": "admin",
+                    "memory_percent_to_use": 10,
+                    "query_concurrency": 5
+                },
+                {
+                    "user_group": [
+                        "admin"
+                    ],
+                    "query_group": [],
+                    "name": "de”,
+                    “memory_percent_to_use”: 91,
+                    “query_concurrency”: 10
+                },
+                {
+                    “user_group”: [],
+                    “query_group”: [],
+                    “name”: “Default queue”,
+                    “memory_percent_to_use”: 1,
+                    “query_concurrency”: 2
+                },
+                {
+                    “user_group”: [
+                        “admin”
+                    ],
+                    “query_group”: [],
+                    “auto_wlm”: false,
+                    “queue_type”: “auto”,
+                    “name”: “admin”
+                },
+                {
+                    “user_group”: [
+                        “adede_ro”
+                    ],
+                    “query_group”: [],
+                    “auto_wlm”: false,
+                    “queue_type”: “auto”,
+                    “name”: “adede_ro”
+                },
+                {
+                    “auto_wlm”: false,
+                    “user_group”: [],
+                    “query_group”: [],
+                    “name”: “Default queue”,
+                    “rules”: []
+                },
+                {
+                    “short_query_queue”: true
+                }
+            ]
+        }]
+    },
+    {
+        “cluster-name”: “dev”,
+        “parameter-group-name”: “test-parameter-group”,
+        “apply-region”: “us-east-1”,
+        “rulesets”: [{
+            “name”: “Workload Management”,
+            “configuration”: [{
+                “auto_wlm”: false
+            }]
+        }]
+    }
+]
