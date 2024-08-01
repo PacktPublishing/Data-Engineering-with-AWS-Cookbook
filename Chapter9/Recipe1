@@ -1,0 +1,47 @@
+import boto3
+from botocore.config import Config
+import logging
+import os
+ 
+
+# Set the number of retention days
+retention_days = 30  
+
+# logging 
+LOGGER = logging.getLogger()
+LOGGER.setLevel(logging.INFO)
+logging.getLogger('boto3').setLevel(logging.CRITICAL)
+logging.getLogger('botocore').setLevel(logging.CRITICAL)
+
+regions = [item.strip() for item in os.environ['AVAILABLE_REGION'].split(",") if item]
+
+
+def lambda_handler(event, context):
+    LOGGER.info(f"start checking= {regions}")
+    if not regions:
+        return {'statusCode': 200, 'body': 'No regions found '}
+
+    for region in regions:
+        
+        client = boto3.client('logs', region_name= region)  
+        response = client.describe_log_groups()
+        nextToken = response.get('nextToken', None)
+        log_groups = response['logGroups']
+
+        # Continue to fetch log groups if nextToken is present
+        while nextToken is not None:
+            response = client.describe_log_groups(nextToken=nextToken)
+            nextToken = response.get('nextToken', None)
+            log_groups += response['logGroups']
+
+        for group in log_groups:
+            if 'retentionInDays' in group.keys():
+                print(group['logGroupName'], group['retentionInDays'], region)
+            else:
+                print("Retention Not found for ", group['logGroupName'], region)
+                set_retention = client.put_retention_policy(
+                    logGroupName=group['logGroupName'],
+                    retentionInDays=retention_days
+                )
+                LOGGER.info(f"PutRetention result {set_retention}")
+    return {'statusCode': 200, 'body': 'completed.'}
