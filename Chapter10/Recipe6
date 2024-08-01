@@ -1,0 +1,63 @@
+import boto3
+
+client = boto3.client(
+    "quicksight",
+)
+principal = ‘arn:aws:quicksight:<aws-region>:<account-id>:user/<namespace-name>/<quicksight-user-name>’
+data_source_permissions = [  
+    "quicksight:DescribeDataSource",
+    "quicksight:DescribeDataSourcePermissions",
+    "quicksight:PassDataSource",
+    "quicksight:UpdateDataSource",
+    "quicksight:DeleteDataSource",
+    "quicksight:UpdateDataSourcePermissions",
+]
+
+data_set_permissions = [
+    "quicksight:DescribeDataSet",
+    "quicksight:DescribeDataSetPermissions",
+    "quicksight:PassDataSet",
+    "quicksight:DescribeIngestion",
+    "quicksight:ListIngestions",
+    "quicksight:UpdateDataSet",
+    "quicksight:DeleteDataSet",
+    "quicksight:CreateIngestion",
+    "quicksight:CancelIngestion",
+    "quicksight:UpdateDataSetPermissions",
+]
+
+analysis_permissions = [
+    "quicksight:RestoreAnalysis",
+    "quicksight:UpdateAnalysisPermissions",
+    "quicksight:DeleteAnalysis",
+    "quicksight:QueryAnalysis",
+    "quicksight:DescribeAnalysisPermissions",
+    "quicksight:DescribeAnalysis",
+    "quicksight:UpdateAnalysis",    
+]
+
+dashboard_permissions = [
+    "quicksight:DescribeDashboard",
+    "quicksight:QueryDashboard",
+    "quicksight:ListDashboardVersions",
+    "quicksight:UpdateDashboardPermissions",
+    "quicksight:UpdateDashboard",
+    "quicksight:DeleteDashboard",
+    "quicksight:UpdateDashboardPublishedVersion",
+    "quicksight:DescribeDashboardPermissions",    
+]
+
+theme_permissions = [
+    "quicksight:DescribeTheme",
+    "quicksight:DescribeThemeAlias",
+    "quicksight:ListThemeAliases",
+    "quicksight:ListThemeVersions",
+    "quicksight:DeleteTheme",
+    "quicksight:UpdateTheme",
+    "quicksight:CreateThemeAlias",
+    "quicksight:DeleteThemeAlias",
+    "quicksight:UpdateThemeAlias",
+    "quicksight:UpdateThemePermissions",
+    "quicksight:DescribeThemePermissions",    
+]
+
