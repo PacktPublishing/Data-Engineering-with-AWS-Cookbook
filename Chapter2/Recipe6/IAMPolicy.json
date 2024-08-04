@@ -1,0 +1,17 @@
+{
+   "Version":"2012-10-17",
+   "Statement":[
+      {
+         "Sid":"VisualEditor0",
+         "Effect":"Allow",
+         "Action":[
+            "s3:GetObject",
+            "sns:Publish"
+         ],
+         "Resource":[
+            "<sns-topic-arn>",
+            "<s3-bucket-arn>/*"
+         ]
+      }
+   ]
+}

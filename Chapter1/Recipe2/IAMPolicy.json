@@ -1,0 +1,19 @@
+{
+   "Version":"2012-10-17",
+   "Statement":[
+      {
+         "Sid":"EnableIntelligentTiering",
+         "Effect":"Deny",
+         "Principal":{
+            "AWS":"*"
+         },
+         "Action":"s3:PutObject",
+         "Resource":"arn:aws:s3:::<your-bucket-name>/*",
+         "Condition":{
+            "StringNotEquals":{
+               "s3:x-amz-storage-class":"INTELLIGENT_TIERING"
+            }
+         }
+      }
+   ]
+}

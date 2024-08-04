@@ -1,0 +1,31 @@
+{
+   "Version":"2012-10-17",
+   "Id":"EnforceSSE-KMS",
+   "Statement":[
+      {
+         "Sid":"DenyNonKmsEncrypted",
+         "Effect":"Deny",
+         "Principal":"*",
+         "Action":"s3:PutObject",
+         "Resource":"arn:aws:s3:::<your-bucket-name>/*",
+         "Condition":{
+            "StringNotEquals":{
+               "s3:x-amz-server-side-encryption":"aws:kms"
+            }
+         }
+      },
+      {
+         "Sid":"AllowKmsEncrypted",
+         "Effect":"Allow",
+         "Principal":"*",
+         "Action":"s3:PutObject",
+         "Resource":"arn:aws:s3:::<your-bucket-name>/*",
+         "Condition":{
+            "StringEquals":{
+               "s3:x-amz-server-side-encryption":"aws:kms",
+               "s3:x-amz-server-side-encryption-aws-kms-key-id":"<your-kms-key-arn>"
+            }
+         }
+      }
+   ]
+}

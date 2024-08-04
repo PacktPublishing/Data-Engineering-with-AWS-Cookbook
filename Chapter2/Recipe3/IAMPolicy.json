@@ -1,0 +1,17 @@
+{
+   "Version":"2012-10-17",
+   "Statement":[
+      {
+         "Effect":"Allow",
+         "Principal":{
+            "Service":"ram.amazonaws.com"
+         },
+         "Action":"glue:ShareResource",
+         "Resource":[
+            "arn:aws:glue:<aws_region>:<aws_account_id>:table/*",
+            "arn:aws:glue:<aws_region>:<aws_account_id>:database/*",
+            "arn:aws:glue:<aws_region>:<aws_account_id>:catalog"
+         ]
+      }
+   ]
+}
