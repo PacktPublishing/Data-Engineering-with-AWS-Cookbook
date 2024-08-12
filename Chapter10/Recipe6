@@ -60,4 +60,48 @@ theme_permissions = [
     "quicksight:UpdateThemePermissions",
     "quicksight:DescribeThemePermissions",    
 ]
+for data_source in client.list_data_sources(AwsAccountId=""<AWS_ACCOUNT_ID>"")["DataSources"]:
+    # print(data_source)
+    client.update_data_source_permissions(
+        AwsAccountId=""<AWS_ACCOUNT_ID>"",
+        DataSourceId=data_source["DataSourceId"],
+        GrantPermissions=[{"Principal": principal, "Actions": data_source_permissions},],
+    )
+
+for data_set in client.list_data_sets(AwsAccountId=""<AWS_ACCOUNT_ID>"")["DataSetSummaries"]:
+    # print(data_set)
+    client.update_data_set_permissions(
+        AwsAccountId=""<AWS_ACCOUNT_ID>"",
+        DataSetId=data_set["DataSetId"],
+        GrantPermissions=[{"Principal": principal, "Actions": data_set_permissions},],
+    )
+
+for analysis in client.list_analyses(AwsAccountId='"<AWS_ACCOUNT_ID>"')['AnalysisSummaryList']:
+    # print(analysis)
+    if analysis['Status'] != 'DELETED':
+        client.update_analysis_permissions(
+            AwsAccountId=""<AWS_ACCOUNT_ID>"",
+            AnalysisId=analysis["AnalysisId"],
+            GrantPermissions=[{"Principal": principal, "Actions": analysis_permissions},],
+        )
+
+for dashboard in client.list_dashboards(AwsAccountId=""<AWS_ACCOUNT_ID>"")[
+    "DashboardSummaryList"
+]:
+    # print(dashboard)
+    client.update_dashboard_permissions(
+        AwsAccountId=""<AWS_ACCOUNT_ID>"",
+        DashboardId=dashboard["DashboardId"],
+        GrantPermissions=[{"Principal": principal, "Actions": dashboard_permissions},],
+    )
+
+for theme in client.list_themes(AwsAccountId=""<AWS_ACCOUNT_ID>"")["ThemeSummaryList"]:
+    if theme['Name'] == 'spenny dark':
+        print(theme)
+        client.update_theme_permissions(
+            AwsAccountId=""<AWS_ACCOUNT_ID>"",
+            ThemeId=theme["ThemeId"],
+            GrantPermissions=[{"Principal": principal, "Actions": theme_permissions},],
+        )
+
 
