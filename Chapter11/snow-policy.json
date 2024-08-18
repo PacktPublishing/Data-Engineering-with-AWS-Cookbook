@@ -1,0 +1,20 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "snowball:CreateJob",
+                "snowball:GetJobManifest",
+                "snowball:GetJobUnlockCode",
+                "snowball:ListJobs",
+                "snowball:UpdateJob",
+                "snowball:CancelJob",
+                "snowball:CreateLongTermPricing",
+                "snowball:GetLongTermPricing",
+                "snowball:ListLongTermPricing"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

@@ -1,0 +1,31 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ssm:DescribeInstanceProperties",
+                "ssm:DescribeSessions",
+                "ec2:describeInstances",
+                "ssm:GetConnectionStatus"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ssm:StartSession"
+            ],
+            "Resource": [
+                "arn:aws:ec2:${Region}:${Account-Id}:instance/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "ssm:resourceTag/ClusterType": [
+                        "QACluster"
+                    ]
+                }
+            }
+        }
+    ]
+}
