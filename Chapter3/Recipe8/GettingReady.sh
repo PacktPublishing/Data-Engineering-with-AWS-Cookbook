@@ -1,4 +1,3 @@
-# Extend the 
 GLUE_ROLE=AWSGlueServiceRole-Recipe
 
 aws iam put-role-policy --role-name $GLUE_ROLE \
