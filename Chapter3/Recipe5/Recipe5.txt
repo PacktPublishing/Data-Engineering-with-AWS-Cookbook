@@ -18,7 +18,7 @@ dynf = glueContext.create_dynamic_frame.from_options(
     format="csv"
 )
 writer=dynf.toDF().write.format("parquet") 
-writer.mode("overwrite").save("$S3_OUPUT_URL")
+writer.mode("overwrite").save("$S3_OUTPUT_URL")
 EOF
 
 
@@ -57,7 +57,7 @@ aws glue get-job-run --job-name GroupingFilesRecipe --run-id $JOB_RUN_ID
 ###############################################################################
 # Step 6
 ###############################################################################
-aws s3 ls $S3_OUPUT_URL
+aws s3 ls $S3_OUTPUT_URL
 
 
 ###############################################################################
@@ -65,4 +65,4 @@ aws s3 ls $S3_OUPUT_URL
 ###############################################################################
 aws glue delete-job --job-name GroupingFilesRecipe
 aws s3 rm --recursive $S3_INPUT_URL
-aws s3 rm --recursive $S3_OUPUT_URL
+aws s3 rm --recursive $S3_OUTPUT_URL

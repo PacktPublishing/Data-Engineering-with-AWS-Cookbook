@@ -13,4 +13,4 @@ S3_INPUT_URL=s3://$GLUE_BUCKET/smallfiles_input/
 aws s3 sync smallfiles_recipe_input $S3_INPUT_URL
 rm smallfiles_recipe_input/*.csv.gz
 rmdir smallfiles_recipe_input
-S3_OUPUT_URL=s3://$GLUE_BUCKET/smallfiles_output/
+S3_OUTPUT_URL=s3://$GLUE_BUCKET/smallfiles_output/
