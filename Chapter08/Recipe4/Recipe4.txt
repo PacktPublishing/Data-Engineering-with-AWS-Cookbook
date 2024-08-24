@@ -27,7 +27,7 @@ aws rds modify-db-instance --db-instance-identifier \
 
 
 ###############################################################################
-# Step 3
+# Step 4
 ###############################################################################
 aws rds delete-db-instance --db-instance-identifier \
  recipe-db-protected --delete-automated-backups \
@@ -94,23 +94,19 @@ EOF
 aws cloudformation deploy --template-file \
   $CFN_TEMPLATE_FILE --stack-name $STACK_NAME
 
-
-###############################################################################
-# Step 11
-###############################################################################
 aws cloudformation update-termination-protection\
  --stack-name $STACK_NAME\
  --enable-termination-protection
 
 
 ###############################################################################
-# Step 12
+# Step 11
 ###############################################################################
 aws cloudformation delete-stack --stack-name $STACK_NAME
 
 
 ###############################################################################
-# Step 13
+# Step 12
 ###############################################################################
 aws cloudformation update-termination-protection\
  --stack-name $STACK_NAME\
@@ -118,7 +114,7 @@ aws cloudformation update-termination-protection\
 
 
 ###############################################################################
-# Step 14
+# Step 13
 ###############################################################################
 aws cloudformation delete-stack --stack-name $STACK_NAME
 
