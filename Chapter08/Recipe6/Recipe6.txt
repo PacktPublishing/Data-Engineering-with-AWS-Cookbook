@@ -34,29 +34,29 @@ terraformer import aws --path-pattern=.\
 
 
 ###############################################################################
-# Step 6
+# Step 5
 ###############################################################################
-vi resources.tf
+# Edit using a text editor, e.g. VIM: vi resources.tf
 # Remove the number_of_workers line and change max_retries to 1
+# An example of the resulting edited file is provided: recipe_reveng/resources.tf
 
 
 ###############################################################################
 # Step 6
 ###############################################################################
 terraform plan
+# On Microsoft Windows, you might need to run with the lock flag disabled
+# terraform plan -lock=false
 
 # Run only if needed because it doesn't automatically set the provider
-#terraform state replace-provider registry.terraform.io/-/aws registry.terraform.io/hashicorp/aws
-
-# On Microsoft Windows, might need to disable file locking running instead
-#terraform plan -lock=false
+# terraform state replace-provider registry.terraform.io/-/aws registry.terraform.io/hashicorp/aws
 
 
 ###############################################################################
 # Step 7
 ###############################################################################
 terraform apply
-# On Microsoft Windows, might need to disable file locking running instead
+# On Microsoft Windows, you might need to run with the lock flag disabled
 #terraform apply -lock=false
 
 aws glue get-job --job-name recipe-shell-reveng
@@ -66,8 +66,6 @@ aws glue get-job --job-name recipe-shell-reveng
 # Step 8
 ###############################################################################
 terraform destroy
-
-# On Microsoft Windows, might need to disable file locking running instead
+# On Microsoft Windows, you might need to disable file locking first
 #terraform destroy -lock=false
-
 
