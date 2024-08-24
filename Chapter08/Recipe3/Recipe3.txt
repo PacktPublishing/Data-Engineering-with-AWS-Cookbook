@@ -1,6 +1,11 @@
 # Here you can find the shell commands that are executed in the shell during the recipe
 
 ###############################################################################
+# Step 1
+###############################################################################
+# You can use the file recipe3_template.json provided instead of typing it
+
+###############################################################################
 # Step 2
 ###############################################################################
 aws cloudformation validate-template --template-body file://recipe3_template.json
