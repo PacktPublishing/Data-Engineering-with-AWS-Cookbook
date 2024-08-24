@@ -1,7 +1,7 @@
 # Here you can find the shell commands that are executed in the shell during the recipe
 
 ###############################################################################
-# Step 1
+# Step 2
 ###############################################################################
 aws cloudformation validate-template --template-body file://recipe3_template.json
 
@@ -19,7 +19,6 @@ aws cloudformation deploy --template-file\
 ###############################################################################
 BUCKET_NAME="recipe-deploy-action-$(aws sts get-caller-identity \
   --query 'Account' --output text)"
-
 aws s3 ls --recursive $BUCKET_NAME 
 
 
