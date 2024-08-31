@@ -1,0 +1,23 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [ {
+    "Effect": "Allow",
+    "Principal": {
+      "AWS":
+"arn:aws:iam:::role/EMR_EC2_DefaultRole"
+    },
+    "Action": [ "glue:GetDatabase",
+"glue:GetPartition","glue:GetTables",
+"glue:GetPartitions", "glue:BatchGetPartition",
+"glue:GetDatabases", "glue:GetTable",
+"glue:GetUserDefinedFunction",
+"glue:GetUserDefinedFunctions"],
+
+    "Resource" : [
+"arn:aws:glue:::catalog",
+"arn:aws:glue:::database/default",
+"arn:aws:glue:::database/cross_catalog_recipe",
+"arn:aws:glue:::table/cross_catalog_recipe/*",
+"arn:aws:glue:::database/global_temp"]
+  } ]
+}

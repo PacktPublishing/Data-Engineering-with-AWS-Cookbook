@@ -19,6 +19,9 @@ aws s3 cp PrintTables.py $S3_SCRIPTS_URL/
 ###############################################################################
 # Step 6
 ###############################################################################
+
+# For convenience, the output of this command is also in the file policy.json
+
 cat << EOF 
 { 
   "Version": "2012-10-17",
