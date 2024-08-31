@@ -57,21 +57,17 @@ grep -A 1 yarn.resourcemanager.address \
 
 
 ###############################################################################
-# Step 8
-###############################################################################
-exit
-
-
-###############################################################################
 # Step 9
 ###############################################################################
+# Close the SSH session to come back to the local shell
 exit
 
 
 ###############################################################################
 # Step 10
 ###############################################################################
-aws emr modify-cluster-attributes --cluster-id $CLUSTER_ID --no-termination-protected
+aws emr modify-cluster-attributes --cluster-id \
+ $CLUSTER_ID --no-termination-protected
 aws emr terminate-clusters --cluster-id $CLUSTER_ID
 
 
