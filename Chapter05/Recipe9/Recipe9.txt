@@ -36,7 +36,7 @@ curl ifconfig.me
 
 
 ###############################################################################
-# Step 9
+# Step 11
 ###############################################################################
 aws emr terminate-clusters –cluster-id $CLUSTER_ID
 aws s3 rm --recursive $S3_LOGS_URL
