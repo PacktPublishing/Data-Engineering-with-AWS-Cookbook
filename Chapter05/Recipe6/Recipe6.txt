@@ -12,8 +12,8 @@ EOF
 
 ###############################################################################
 # Step 2
-aws s3 cp recipe_bootstrap.sh $S3_SCRIPTS_URL/
 ###############################################################################
+aws s3 cp recipe_bootstrap.sh $S3_SCRIPTS_URL/
 
 
 ###############################################################################
@@ -38,8 +38,8 @@ CLUSTER_ID=$(aws emr create-cluster \
 ###############################################################################
 # Step 5
 ###############################################################################
-aws s3 cp ${S3_LOGS_URL}/your cluster id>/\
-steps/<the step id>/stdout.gz
+# In addition to the console, you can also download the logs programatically
+aws s3 cp ${S3_LOGS_URL}/your cluster id>/steps/<the step id>/stdout.gz
 
 
 ###############################################################################
