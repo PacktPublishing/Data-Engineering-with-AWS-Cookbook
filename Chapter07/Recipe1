@@ -14,10 +14,23 @@ job = Job(glueContext)
 
 
 
-df_planet= glueContext.create_dynamic_frame.from_options(format_options={"quoteChar": "\"", "withHeader": True, "separator": ","}, connection_type="s3", format="csv", connection_options={"paths": ["s3://sample-test-wf09/csv/star_wars_characters.csv"], "recurse": True}, transformation_ctx=" df_weapon")
+df_planet = glueContext.create_dynamic_frame.from_options(
+    connection_type="s3",
+    connection_options={
+        "paths": ["s3://sample-test-wf09/star_wars_characters.csv"],
+        "recurse": True,
+    },
+    format="csv"
+)
 
-df_species_catagory = glueContext.create_dynamic_frame.from_options(format_options={"quoteChar": "\"", "withHeader": True, "separator": ","}, connection_type="s3", format="csv", connection_options={"paths": ["s3://sample-test-wf09/csv/star_wars_characters.csvs3://sample-test/csv/star_wars_planets.csv"], "recurse": True}, transformation_ctx=" df_planet")
-
+df_species_catagory = glueContext.create_dynamic_frame.from_options(
+    connection_type="s3",
+    connection_options={
+        "paths": ["s3://sample-test-wf09/star_wars_characters.csv"],
+        "recurse": True,
+    },
+    format="csv"
+)
 
 EvaluateDataQualityProcessRows_nodeoutput_ruleset = """
     Rules = [RowCount = 42,
