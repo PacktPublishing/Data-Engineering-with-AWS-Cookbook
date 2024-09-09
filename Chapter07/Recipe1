@@ -6,15 +6,19 @@ from awsglue.context import GlueContext
 from awsglue.job import Job
 from awsgluedq.transforms import EvaluateDataQuality
 
-args = getResolvedOptions(sys.argv, ['JOB_NAME'])
 #Create Glue context
 sc = SparkContext()
 glueContext = GlueContext(sc)
 spark = glueContext.spark_session
 job = Job(glueContext)
-1.4.	Create DynamicFrame from the dataset on your S3 bucket. For various scenarios in this recipe, we will create 2 two DynamicFrames as the belowshown:
-# weapon dataset
-df_weapon = glueContext.create_dynamic_frame.from_options(format_options={"quoteChar": "\"", "withHeader": True, "separator": ","}, connection_type="s3", format="csv", connection_options={"paths": ["s3://sample-test/csv/star_wars_characters.csv"], "recurse": True}, transformation_ctx=" df_weapon")
+#create df homeworld, make sure you use a relavant dataset and your s3 bucket 
+df_homeworld= glueContext.create_dynamic_frame.from_options(format_options={"quoteChar": "\"", "withHeader": True, "separator": ","}, connection_type="s3", format="csv", connection_options={"paths": ["s3://sample-test-wf09/csv/star_wars_characters.csv"], "recurse": True}, transformation_ctx=" df_weapon")
 
-# planet dataset
-df_planet = glueContext.create_dynamic_frame.from_options(format_options={"quoteChar": "\"", "withHeader": True, "separator": ","}, connection_type="s3", format="csv", connection_options={"paths": ["s3://sample-test/csv/star_wars_planets.csv"], "recurse": True}, transformation_ctx=" df_planet")
+#create df species, make sure you use a relavant dataset and your s3 bucketplanet 
+df_planet = glueContext.create_dynamic_frame.from_options(format_options={"quoteChar": "\"", "withHeader": True, "separator": ","}, connection_type="s3", format="csv", connection_options={"paths": ["s3://sample-test-wf09/csv/star_wars_characters.csvs3://sample-test/csv/star_wars_planets.csv"], "recurse": True}, transformation_ctx=" df_planet")
+
+EvaluateDataQualityProcessRows_nodeoutput_ruleset = """
+    Rules = [RowCount = 42,
+             ReferentialIntegrity "home_planet" "planet.name" = 1, 
+             ReferentialIntegrity "preferred_weapon" "weapon.type" = 1]
+"""
