@@ -11,14 +11,21 @@ sc = SparkContext()
 glueContext = GlueContext(sc)
 spark = glueContext.spark_session
 job = Job(glueContext)
-#create df homeworld, make sure you use a relavant dataset and your s3 bucket 
-df_homeworld= glueContext.create_dynamic_frame.from_options(format_options={"quoteChar": "\"", "withHeader": True, "separator": ","}, connection_type="s3", format="csv", connection_options={"paths": ["s3://sample-test-wf09/csv/star_wars_characters.csv"], "recurse": True}, transformation_ctx=" df_weapon")
 
-#create df species, make sure you use a relavant dataset and your s3 bucketplanet 
-df_planet = glueContext.create_dynamic_frame.from_options(format_options={"quoteChar": "\"", "withHeader": True, "separator": ","}, connection_type="s3", format="csv", connection_options={"paths": ["s3://sample-test-wf09/csv/star_wars_characters.csvs3://sample-test/csv/star_wars_planets.csv"], "recurse": True}, transformation_ctx=" df_planet")
+
+
+df_planet= glueContext.create_dynamic_frame.from_options(format_options={"quoteChar": "\"", "withHeader": True, "separator": ","}, connection_type="s3", format="csv", connection_options={"paths": ["s3://sample-test-wf09/csv/star_wars_characters.csv"], "recurse": True}, transformation_ctx=" df_weapon")
+
+df_species_catagory = glueContext.create_dynamic_frame.from_options(format_options={"quoteChar": "\"", "withHeader": True, "separator": ","}, connection_type="s3", format="csv", connection_options={"paths": ["s3://sample-test-wf09/csv/star_wars_characters.csvs3://sample-test/csv/star_wars_planets.csv"], "recurse": True}, transformation_ctx=" df_planet")
+
 
 EvaluateDataQualityProcessRows_nodeoutput_ruleset = """
     Rules = [RowCount = 42,
-             ReferentialIntegrity "home_planet" "planet.name" = 1, 
-             ReferentialIntegrity "preferred_weapon" "weapon.type" = 1]
+             ReferentialIntegrity "planet" "planet.homeworldname" = 1, 
+             ReferentialIntegrity " species_catagory" "species_catagory. speciestype" = 1]
 """
+
+EvaluateDataQuality_additional_sources = {
+    "planet": df_weapon,
+    "species_catagory": df_species_catagory
+}
