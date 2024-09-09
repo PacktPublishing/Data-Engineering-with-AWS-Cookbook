@@ -1,0 +1,16 @@
+{
+	"Comment": "A simple AWS Step Functions state machine that invokes two Lambda functions.",
+	"StartAt": "GetDataState",
+	"States": {
+		"GetDataState": {
+			"Type": "Task",
+			"Resource": "arn:aws:lambda:REGION:ACCOUNT_ID:function:GetDataFunction",
+			"Next": "ProcessDataState"
+		},
+		"ProcessDataState": {
+			"Type": "Task",
+			"Resource": "arn:aws:lambda:REGION:ACCOUNT_ID:function:ProcessDataFunction",
+			"End": true
+		}
+	}
+}

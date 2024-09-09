@@ -1,0 +1,12 @@
+{
+  "source": ["aws.s3"],
+  "detail-type": ["Object Created"],
+  "detail": {
+    "bucket": {
+      "name": ["aws-data-eng-recipes-bucket"]
+    },
+    "object": {
+      "key": [{"prefix": "data/"}]
+    }
+  }
+}

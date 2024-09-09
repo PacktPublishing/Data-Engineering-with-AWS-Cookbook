@@ -1,0 +1,33 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "glue:*",
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:ListBucket",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "cloudwatch:PutMetricData"
+            ],
+            "Resource": [
+                "arn:aws:s3:::your-mwaa-bucket",
+                "arn:aws:s3:::your-mwaa-bucket/*",
+                "arn:aws:logs:*:*:*",
+                "arn:aws:glue:*:*:catalog",
+                "arn:aws:glue:*:*:database/*",
+                "arn:aws:glue:*:*:table/*",
+                "arn:aws:glue:*:*:connection/*",
+                "arn:aws:glue:*:*:job/*",
+                "arn:aws:glue:*:*:crawler/*",
+                "arn:aws:glue:*:*:workflow/*",
+                "arn:aws:glue:*:*:trigger/*",
+                "arn:aws:glue:*:*:classifier/*",
+                "arn:aws:cloudwatch:*:*:metric/*"
+            ]
+        }
+    ]
+}

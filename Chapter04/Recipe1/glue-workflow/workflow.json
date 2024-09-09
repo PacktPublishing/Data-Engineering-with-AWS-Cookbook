@@ -1,0 +1,29 @@
+{
+	"Name": "CsvToParquetWorkflow",
+	"Entities": [
+		{
+			"Type": "Trigger",
+			"Name": "CsvToParquetTrigger",
+			"Predicate": {
+				"Logical": "ANY",
+				"Conditions": [
+					{
+						"LogicalOperator": "EQUALS",
+						"State": "SUCCEEDED",
+						"CrawlerName": "CsvCrawler"
+					}
+				]
+			},
+			"Actions": [
+				{
+					"JobName": "CsvToParquetJob",
+					"Arguments": {
+						"--job-bookmark-option": "job-bookmark-enable"
+					}
+				}
+			],
+			"Type": "SCHEDULED",
+			"Schedule": "cron(0 12 * * ? *)"
+		}
+	]
+}

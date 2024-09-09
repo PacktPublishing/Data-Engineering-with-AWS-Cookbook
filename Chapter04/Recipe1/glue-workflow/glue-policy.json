@@ -1,0 +1,57 @@
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "GlueAccess",
+			"Effect": "Allow",
+			"Action": [
+				"glue:Get*",
+				"glue:Put*",
+				"glue:Create*",
+				"glue:Delete*",
+				"glue:Update*",
+				"glue:List*",
+				"glue:Start*",
+				"glue:Stop*",
+				"glue:Batch*",
+				"logs:CreateLogGroup",
+				"logs:CreateLogStream",
+				"logs:PutLogEvents",
+				"logs:AssociateKmsKey",
+				"cloudwatch:PutMetricData"
+			],
+			"Resource": "*"
+		},
+		{
+			"Sid": "S3Access",
+			"Effect": "Allow",
+			"Action": [
+				"s3:GetObject",
+				"s3:PutObject",
+				"s3:DeleteObject",
+				"s3:ListBucket",
+				"s3:GetBucketLocation",
+				"logs:CreateLogGroup",
+				"logs:CreateLogStream",
+				"logs:PutLogEvents"
+			],
+			"Resource": [
+				"arn:aws:s3:::your-bucket",
+				"arn:aws:s3:::your-bucket/data/*",
+				"arn:aws:s3:::your-bucket/scripts/*",
+				"arn:aws:s3:::your-bucket/temp/*",
+				"arn:aws:s3:::your-bucket/parquet-data/*",
+				"arn:aws:s3:::your-bucket/*",
+				"arn:aws:logs:*:*:*",
+				"arn:aws:glue:*:*:catalog",
+				"arn:aws:glue:*:*:database/*",
+				"arn:aws:glue:*:*:table/*",
+				"arn:aws:glue:*:*:job/*",
+				"arn:aws:glue:*:*:crawler/*",
+				"arn:aws:glue:*:*:workflow/*",
+				"arn:aws:glue:*:*:trigger/*",
+				"arn:aws:glue:*:*:classifier/*"
+			]
+		}
+	]
+}

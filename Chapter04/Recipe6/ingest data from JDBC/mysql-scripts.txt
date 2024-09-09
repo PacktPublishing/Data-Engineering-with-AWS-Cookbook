@@ -1,0 +1,22 @@
+CREATE DATABASE EMPLOYEE_DB;
+
+USE EMPLOYEE_DB;
+
+CREATE TABLE EMPLOYEE (
+  Emp_NO INTEGER PRIMARY KEY,
+  Emp_Name TEXT NOT NULL,
+  Emp_Add TEXT NOT NULL,
+  Emp_Phone TEXT NOT NULL,
+  Dept_No TEXT NOT NULL,
+  Dept_Name TEXT NOT NULL,
+  Salary TEXT NOT NULL
+);
+
+-- insert
+INSERT INTO EMPLOYEE VALUES (00001, 'vaquar', 'abc vernon hill IL'    ,'2245498465' , '3245'          , 'IT'    ,'325000');
+INSERT INTO EMPLOYEE VALUES (00002, 'Ryan', '23 lakezurich IL'        ,'88765498465', '3349'          , 'BI'    ,'875000');
+INSERT INTO EMPLOYEE VALUES (00003, 'Saki ', '112 downtown chicago IL','5835497865' , '9932'          , 'Sales' ,'828000');
+INSERT INTO EMPLOYEE VALUES (00004, 'Sam', '832 vernon hill IL'       ,'2243698465' , '4321'          , 'Mareting','335000');
+INSERT INTO EMPLOYEE VALUES (00005, 'Denial', '123 iv schumburg IL'   ,'8375498235' , '2222'          , 'IT'    ,'46000');
+INSERT INTO EMPLOYEE VALUES (00006, 'Mahesh', '2345 platine IL'       ,'9851678465' , '1001'          , 'Sales' ,'58000');
+INSERT INTO EMPLOYEE VALUES (00007, 'Rishi', '123 horthownwood IL'    ,'3216723465' , '3246'          , 'BI'    ,'310000');

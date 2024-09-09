@@ -1,0 +1,12 @@
+{
+  "source": ["aws.s3"],
+  "detail-type": ["Object Created"],
+  "detail": {
+    "bucket": {
+      "name": ["your-bucket"]
+    },
+    "object": {
+      "key": [{"prefix": "csv-data/"}]
+    }
+  }
+}
