@@ -1,0 +1,53 @@
+#Create a policy in IAM name LambdaRedshiftDataAPIRole 
+
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "VisualEditor0",
+			"Effect": "Allow",
+			"Action": [
+				"logs:CreateLogStream",
+				"redshift-data:GetStatementResult",
+				"redshift:GetClusterCredentials",
+				"redshift-data:DescribeStatement",
+				"logs:CreateLogGroup",
+				"logs:PutLogEvents",
+				"redshift-data:ExecuteStatement",
+				"redshift-data:ListStatements"
+			],
+			"Resource": "*"
+		}
+	]
+}
+###################################
+#create lambda function
+import logging
+import awswrangler as wr
+import json
+
+statement = """
+        UNLOAD (SELECT * FROM redshift.{table_name}') 
+        TO '{S3_location}' 
+        IAM_ROLE '{'arn:aws:iam:your-account-id:role/your-role' }'
+        PARQUET PARALLEL ON 
+        PARTITION BY (product_category)'
+    """
+
+def lambda_handler(event, context):
+    logger.info(json.dumps(event))
+    query_id = event['Input'].get('query_id')
+    con_redshift = wr.data_api.redshift.connect(
+        workgroup_name="aws-sdk-pandas",
+        database="test_redshift",
+        secret_arn="arn:aws:secretsmanager:us-east-1:your-account-id:secret:your-secret-name",
+    )
+    
+    
+     wr.data_api.redshift.read_sql_query(
+            sql=statement,
+            con=con_redshift,
+    return {
+        'statusCode': 200,
+        'body': json.dumps(“finished”)
+    }
