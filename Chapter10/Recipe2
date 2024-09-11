@@ -1,0 +1,83 @@
+import boto3, logging, time, os, re
+
+redshift_client = boto3.client("redshift")
+ssm_client = boto3.client("ssm")
+
+team='redshift' 
+app_name='bi_reports' 
+env_label='dev'
+
+def get_parameter(param_name):
+    try:
+        param = ssm_client.get_parameter(Name=param_name, WithDecryption=True)
+        return param["Parameter"]["Value"]
+    except ssm_client.exceptions.ParameterNotFound:
+        logging.error(f"{param_name} not found.")
+        return None
+
+cluster_id = get_parameter(f"/{team}/{app_name}/{env_label}/redshift/cluster/id")
+node_type = get_parameter(f"/{team}/{app_name}/{env_label}/redshift/cluster/node_type")
+subnet_group_name = get_parameter(f"/{team}/{app_name}/{env_label}/redshift/subngroup/name")
+vpce_sg_id = get_parameter(f"/{team}/{app_name}/{env_label}/redshift/vpcesg/groupid")
+
+def check_vpce(cluster_id, node_type):
+    rs_vpce = redshift_client.describe_endpoint_access(ClusterIdentifier=cluster_id)
+    if not rs_vpce["EndpointAccessList"] and re.compile(r"^ra3\.").match(node_type):
+        return True
+    else:
+        return False
+
+if check_vpce(cluster_id, node_type):
+    create_vpce_access(cluster_id, subnet_group_name, vpce_sg_id)
+else:
+    print(f"VPC endpoint exists or node type != RA3.")
+
+def create_vpce_access(cluster_id, subnet_group_name, vpce_sg_id):
+    """
+    A Redshift-managed VPC endpoint as a private connection between a VPC that contains a cluster and a VPC that is running a client tool.
+    After Amazon Redshift-managed VPC endpoints, the network admin no longer needs to manage the cluster or the load balancer,
+    because this is managed by Amazon Redshift. The connection string to the used after the initial setup,
+    and allow the data analyst to connect to their BI tool without further involvement from the network admin team.
+
+    """
+    # Redshift managed Vpc endpoint creation
+    redshift_client.create_endpoint_access(
+        ClusterIdentifier=cluster_id,
+        EndpointName=f"{team}-{app_name}-vpce",
+        SubnetGroupName=subnet_group_name,
+        VpcSecurityGroupIds=[
+            vpce_sg_id,
+        ],
+    )
+    print("Wait for Redshift Managed VPC Endpoint Creation ...")
+    time.sleep(300)
+    rs_vpce = redshift_client.describe_endpoint_access(ClusterIdentifier=cluster_id)
+    print(f"Redshift_VPEC: {rs_vpce}")
+    ip_addr = rs_vpce["EndpointAccessList"][0]["VpcEndpoint"]["NetworkInterfaces"][0]["PrivateIpAddress"]
+    vpce_name = rs_vpce["EndpointAccessList"][0]["EndpointName"]
+    # Storing the VPC endpoint name in SSM parameter store
+    ssm_client.put_parameter(
+        Name=f"/{team}/{app_name}/{env_label}/redshift/vpce/ip",
+        Description="Redshift managed vpc endpoint",
+        Value=ip_addr,
+        Type="String",
+        Overwrite=True,
+        Tier="Standard",
+    )
+    print(
+        rs_vpce["EndpointAccessList"][0]["VpcEndpoint"]["NetworkInterfaces"][0]["PrivateIpAddress"]
+    )
+
+    ssm_client.put_parameter(
+        Name=f"/{team}/{app_name}/{env_label}/redshift/vpce/name",
+        Description="Redshift managed vpc endpoint",
+        Value=vpce_name,
+        Type="String",
+        Overwrite=True,
+        Tier="Standard",
+    )
+    print(rs_vpce["EndpointAccessList"][0]["EndpointName"])
+    return rs_vpce
+
+
+
