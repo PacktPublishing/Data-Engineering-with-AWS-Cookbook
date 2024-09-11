@@ -1,0 +1,29 @@
+##############################
+#Step 6: create an external schema and external tables
+create external schema spectrum_data from data catalog 
+database 'sample_db' 
+iam_role 'arn:aws:iam::xxxxxxxx:role/xxxxx'
+create external database if not exists; 
+
+##############################
+#create an external table using the following SQL statement
+CREATE EXTERNAL TABLE spectrum_data.your_table_name (
+    first_and_last_name VARCHAR,
+    email VARCHAR,
+    id BIGINT,
+    id_2 BIGINT,
+    gender VARCHAR,
+    country VARCHAR,
+    fax VARCHAR
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION 's3://sample-test-wf09/'
+TABLE PROPERTIES ('skip.header.line.count'='1');LOCATION 's3://bucket_name/prefix/';
+
+#################################
+#use the standard sql queries to query the data in Amazon S3
+select top 3 *
+from spectrum_data.your_table_name
+
+
