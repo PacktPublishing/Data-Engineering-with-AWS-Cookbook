@@ -7,7 +7,7 @@
          "Action":[
             "s3:ListAllMyBuckets"
          ],
-         "Resource":"* "
+         "Resource":"*"
       },
       {
          "Sid":"AllowBucketListing",

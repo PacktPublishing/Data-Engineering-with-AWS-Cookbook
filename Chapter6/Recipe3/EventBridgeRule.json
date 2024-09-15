@@ -1,0 +1,22 @@
+{
+   "source":[
+      "aws.s3",
+      "aws.lambda",
+      "aws.ec2"
+   ],
+   "detail-type":[
+      "AWS API Call via CloudTrail"
+   ],
+   "detail":{
+      "eventSource":[
+         "s3.amazonaws.com",
+         "lambda.amazonaws.com",
+         "ec2.amazonaws.com"
+      ],
+      "eventName":[
+         "CreateBucket",
+         "CreateFunction",
+         "RunInstances"
+      ]
+   }
+}
