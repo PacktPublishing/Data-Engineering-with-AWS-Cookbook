@@ -1,3 +1,5 @@
+#Initialize Boto3 clients for Redshift and SSM, and define environment variables
+
 import boto3, logging, time, os, re
 
 redshift_client = boto3.client("redshift")
@@ -7,6 +9,7 @@ team='redshift'
 app_name='bi_reports' 
 env_label='dev'
 
+#Fetch parameters from SSM
 def get_parameter(param_name):
     try:
         param = ssm_client.get_parameter(Name=param_name, WithDecryption=True)
@@ -20,6 +23,7 @@ node_type = get_parameter(f"/{team}/{app_name}/{env_label}/redshift/cluster/node
 subnet_group_name = get_parameter(f"/{team}/{app_name}/{env_label}/redshift/subngroup/name")
 vpce_sg_id = get_parameter(f"/{team}/{app_name}/{env_label}/redshift/vpcesg/groupid")
 
+#Check whether a VPC endpoint already exists for the Redshift cluster or whether your cluster is RA3 type
 def check_vpce(cluster_id, node_type):
     rs_vpce = redshift_client.describe_endpoint_access(ClusterIdentifier=cluster_id)
     if not rs_vpce["EndpointAccessList"] and re.compile(r"^ra3\.").match(node_type):
@@ -32,6 +36,7 @@ if check_vpce(cluster_id, node_type):
 else:
     print(f"VPC endpoint exists or node type != RA3.")
 
+#create a Redshift-managed VPC endpoint
 def create_vpce_access(cluster_id, subnet_group_name, vpce_sg_id):
     """
     A Redshift-managed VPC endpoint as a private connection between a VPC that contains a cluster and a VPC that is running a client tool.
@@ -78,6 +83,8 @@ def create_vpce_access(cluster_id, subnet_group_name, vpce_sg_id):
     )
     print(rs_vpce["EndpointAccessList"][0]["EndpointName"])
     return rs_vpce
-
+#Execute the script
+if __name__ == '__main__':
+    main()
 
 
