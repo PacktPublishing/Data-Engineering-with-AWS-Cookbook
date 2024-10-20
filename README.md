@@ -92,21 +92,30 @@ Following the chapter list with the link to the companion files as needed.
 - [Using AWS SDK for Python to manage Amazon QuickSight](https://github.com/PacktPublishing/Data-Engineering-with-AWS-Cookbook/blob/main/Chapter10/Recipe6)
 
 ## [Chapter 11](https://github.com/PacktPublishing/Data-Engineering-with-AWS-Cookbook/tree/main/Chapter11)
-- Steps and process to migrate to on-premises platform to AWS
+- Reviewing the steps and processes for migrating an on-premises platform to AWS
 - Choosing your AWS analytics stack – the re-platforming approach
 - Picking the correct migration approach for your workload
 - Planning for prototyping and testing
-- Modernizing ETL pipelines with a big data platform
+- Converting ETL processes with big data frameworks
 - Defining and executing your migration process with Hadoop
-- Migrating the existing Hadoop security authentication and authorization
+- Migrating the existing Hadoop security authentication and authorization processes
 
 ## [Chapter 12](https://github.com/PacktPublishing/Data-Engineering-with-AWS-Cookbook/tree/main/Chapter12)
-- Asset the Total Cost of Ownership
-- Define and execute your migration process
-- Migrate the existing security authentication and authorization
-- Learn how to choose between Amazon S3 and Hadoop HDFS to store data depending on the use case
-- On-premise HDFS data migration with AWS Datasync
-- Migrate Hive metastore
-- Migrate Apache Oozie workflows
-- Decide Hadoop HDFS and Amazon S3 for data storage
-- Secure your cluster on EMR while connecting to other systems and users
+- Creating SCT migration assessment report with AWS SCT
+- Extracting Data with AWS DMS
+- Live example – migrating an Oracle database from a local laptop to AWS RDS using AWS SCT
+- [Leveraging AWS Snow Family for large-scale data migration](https://github.com/PacktPublishing/Data-Engineering-with-AWS-Cookbook/blob/main/Chapter12/snowball-policy.json)
+
+## [Chapter 13](https://github.com/PacktPublishing/Data-Engineering-with-AWS-Cookbook/tree/main/Chapter13)
+- Calculating total cost of ownership (TCO) using AWS TCO calculators
+- Conducting a Hadoop migration assessment using the TCO simulator
+- Selecting how to store your data
+- Migrating on-premises HDFS data using AWS DataSync
+- [Migrating the Hive Metastore to AWS](https://github.com/PacktPublishing/Data-Engineering-with-AWS-Cookbook/blob/main/Chapter13/GlueFederationJob%20.py)
+- [Migrating and running Apache Oozie on Amazon EMR](https://github.com/PacktPublishing/Data-Engineering-with-AWS-Cookbook/blob/main/Chapter13/bootstrap-script.sh)
+- Migrating an Oozie database to the Amazon RDS MySQL
+- [Setting up networking – establishing a secure connection to your EMR cluster
+](https://github.com/PacktPublishing/Data-Engineering-with-AWS-Cookbook/blob/main/Chapter13/emr-session-manager-policy.json)
+- Performing a seamless HBase migration to AWS
+- [Migrating HBase to DynamoDB on AWS](https://github.com/PacktPublishing/Data-Engineering-with-AWS-Cookbook/blob/main/Chapter13/dynamodb-import-glue-job.py)
+
